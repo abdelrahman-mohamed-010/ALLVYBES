@@ -1,49 +1,62 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, AlertTriangle, Instagram, ArrowLeft } from 'lucide-react';
-import { Button } from '../UI/Button';
-import { Input } from '../UI/Input';
-import { useStore } from '../../store/useStore';
-import { CheckIn, User as UserType } from '../../types';
+import React, { useState } from "react";
+import {
+  User,
+  Mail,
+  Phone,
+  AlertTriangle,
+  Instagram,
+  ArrowLeft,
+} from "lucide-react";
+import { Button } from "../UI/Button";
+import { Input } from "../UI/Input";
+import { useStore } from "../../store/useStore";
+import { CheckIn, User as UserType } from "../../types";
+import { useNavigate } from "react-router-dom";
 
-interface CheckInFormProps {
-  onBack: () => void;
-  onComplete: () => void;
-}
+export const CheckInForm: React.FC = () => {
+  const { currentEvent, addUser, addCheckIn, setCurrentUser, darkMode } =
+    useStore();
+  const navigate = useNavigate();
 
-export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) => {
-  const { currentEvent, addUser, addCheckIn, setCurrentUser, darkMode } = useStore();
-  
   const [formData, setFormData] = useState({
-    artistName: '',
-    instagram: '',
-    phone: '',
-    email: '',
-    emergencyContact: '',
+    artistName: "",
+    instagram: "",
+    phone: "",
+    email: "",
+    emergencyContact: "",
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleBack = () => {
+    navigate("/");
+  };
+
+  const handleComplete = () => {
+    navigate("/lobby");
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.artistName.trim()) {
-      newErrors.artistName = 'Artist name is required';
+      newErrors.artistName = "Artist name is required";
     }
-    
+
     if (!formData.instagram.trim()) {
-      newErrors.instagram = 'Instagram handle is required';
+      newErrors.instagram = "Instagram handle is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm() || !currentEvent) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Create new user
       const newUser: UserType = {
@@ -55,7 +68,7 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
         emergencyContact: formData.emergencyContact,
         createdAt: new Date(),
       };
-      
+
       // Create check-in record
       const newCheckIn: CheckIn = {
         id: Date.now().toString(),
@@ -69,39 +82,49 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
         performed: false,
         specialEffects: false,
       };
-      
+
       addUser(newUser);
       addCheckIn(newCheckIn);
       setCurrentUser(newUser);
-      
+
       setTimeout(() => {
-        onComplete();
+        handleComplete();
       }, 1000);
-      
     } catch (error) {
-      console.error('Check-in failed:', error);
+      console.error("Check-in failed:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-dark-bg' : 'bg-white'} pb-20`}>
+    <div
+      className={`min-h-screen ${darkMode ? "bg-dark-bg" : "bg-white"} pb-20`}
+    >
       <div className="px-6 py-8">
         <div className="flex items-center mb-8">
-          <Button onClick={onBack} variant="ghost" icon={ArrowLeft} size="sm">
+          <Button
+            onClick={handleBack}
+            variant="ghost"
+            icon={ArrowLeft}
+            size="sm"
+          >
             Back
           </Button>
         </div>
-        
+
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-primary-green to-primary-purple rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="text-white" size={32} />
           </div>
-          <h1 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-dark-text' : 'text-gray-900'}`}>
+          <h1
+            className={`text-2xl font-bold mb-2 ${
+              darkMode ? "text-dark-text" : "text-gray-900"
+            }`}
+          >
             Artist Check-In
           </h1>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`${darkMode ? "text-gray-400" : "text-gray-600"}`}>
             {currentEvent?.name}
           </p>
         </div>
@@ -110,23 +133,27 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
           <Input
             label="Artist Name"
             value={formData.artistName}
-            onChange={(value) => setFormData({ ...formData, artistName: value })}
+            onChange={(value) =>
+              setFormData({ ...formData, artistName: value })
+            }
             placeholder="Your stage name"
             icon={User}
             required
             error={errors.artistName}
           />
-          
+
           <Input
             label="Instagram Handle"
             value={formData.instagram}
-            onChange={(value) => setFormData({ ...formData, instagram: value.replace('@', '') })}
+            onChange={(value) =>
+              setFormData({ ...formData, instagram: value.replace("@", "") })
+            }
             placeholder="username (without @)"
             icon={Instagram}
             required
             error={errors.instagram}
           />
-          
+
           <Input
             label="Phone Number"
             type="tel"
@@ -135,7 +162,7 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
             placeholder="(555) 123-4567"
             icon={Phone}
           />
-          
+
           <Input
             label="Email"
             type="email"
@@ -144,11 +171,13 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
             placeholder="your@email.com"
             icon={Mail}
           />
-          
+
           <Input
             label="Emergency Contact"
             value={formData.emergencyContact}
-            onChange={(value) => setFormData({ ...formData, emergencyContact: value })}
+            onChange={(value) =>
+              setFormData({ ...formData, emergencyContact: value })
+            }
             placeholder="Name and phone number"
             icon={AlertTriangle}
           />
@@ -163,15 +192,24 @@ export const CheckInForm: React.FC<CheckInFormProps> = ({ onBack, onComplete }) 
             className="w-full"
             glow
           >
-            {isSubmitting ? 'Checking In...' : 'Complete Check-In'}
+            {isSubmitting ? "Checking In..." : "Complete Check-In"}
           </Button>
         </div>
-        
-        <div className={`mt-6 p-4 rounded-xl ${
-          darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50 border border-gray-200'
-        }`}>
-          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            By checking in, you'll be added to the event lobby where other artists can discover and connect with you.
+
+        <div
+          className={`mt-6 p-4 rounded-xl ${
+            darkMode
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-gray-50 border border-gray-200"
+          }`}
+        >
+          <p
+            className={`text-sm ${
+              darkMode ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            By checking in, you'll be added to the event lobby where other
+            artists can discover and connect with you.
           </p>
         </div>
       </div>
