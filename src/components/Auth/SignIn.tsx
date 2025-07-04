@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { auth } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
@@ -17,6 +17,7 @@ export const SignIn: React.FC = () => {
   const { darkMode } = useStore();
 
   const from = location.state?.from?.pathname || '/';
+  const message = location.state?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +30,7 @@ export const SignIn: React.FC = () => {
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data, error } = await auth.signIn(email.trim(), password);
 
       if (error) {
         setError(error.message);
@@ -49,27 +47,6 @@ export const SignIn: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Demo login functions
-  const handleDemoArtist = async () => {
-    setEmail('artist@demo.com');
-    setPassword('demo123');
-    // Auto-submit after setting values
-    setTimeout(() => {
-      const form = document.querySelector('form') as HTMLFormElement;
-      form?.requestSubmit();
-    }, 100);
-  };
-
-  const handleDemoAdmin = async () => {
-    setEmail('admin@demo.com');
-    setPassword('demo123');
-    // Auto-submit after setting values
-    setTimeout(() => {
-      const form = document.querySelector('form') as HTMLFormElement;
-      form?.requestSubmit();
-    }, 100);
   };
 
   return (
@@ -98,32 +75,12 @@ export const SignIn: React.FC = () => {
             </p>
           </div>
 
-          {/* Demo Buttons */}
-          <div className="mb-6 space-y-2">
-            <p className={`text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Quick Demo Access:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                onClick={handleDemoArtist}
-                variant="ghost"
-                size="sm"
-                className="text-xs"
-              >
-                Demo Artist
-              </Button>
-              <Button
-                type="button"
-                onClick={handleDemoAdmin}
-                variant="ghost"
-                size="sm"
-                className="text-xs"
-              >
-                Demo Admin
-              </Button>
+          {/* Success Message */}
+          {message && (
+            <div className="mb-6 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700">
+              <p className="text-green-700 dark:text-green-400 text-sm">{message}</p>
             </div>
-          </div>
+          )}
 
           {/* Form Fields */}
           <div className="space-y-4">

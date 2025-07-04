@@ -6,11 +6,13 @@ import { VybesLoader } from '../components/UI/VybesLoader';
 interface ProtectedRouteProps {
   requireAuth?: boolean;
   redirectTo?: string;
+  requireProfileComplete?: boolean;
 }
 
 export function ProtectedRoute({ 
   requireAuth = true, 
-  redirectTo = '/login' 
+  redirectTo = '/login',
+  requireProfileComplete = true
 }: ProtectedRouteProps) {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -39,7 +41,13 @@ export function ProtectedRoute({
   }
 
   // User is authenticated but profile is incomplete
-  if (isAuthenticated && user && !user.profileComplete && location.pathname !== '/profile/setup') {
+  if (
+    isAuthenticated && 
+    user && 
+    requireProfileComplete &&
+    !user.profileComplete && 
+    location.pathname !== '/profile/setup'
+  ) {
     return <Navigate to="/profile/setup" replace />;
   }
 

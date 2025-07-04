@@ -124,7 +124,7 @@ const AppLayout = () => {
             />
 
             {/* Admin-only routes nested inside protected */}
-            <Route element={<AdminRoute />}>
+            <Route element={<AdminRoute requiredPermission="manage_events" />}>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/events" element={<EventManagement />} />
             </Route>

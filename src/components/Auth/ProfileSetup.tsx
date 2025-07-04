@@ -4,7 +4,7 @@ import { Input } from '../UI/Input';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useStore } from '../../store/useStore';
-import { User, Instagram, Phone, Mail, AlertTriangle } from 'lucide-react';
+import { User, Instagram, Phone, AlertTriangle } from 'lucide-react';
 
 export const ProfileSetup: React.FC = () => {
   const { user, updateProfile } = useAuth();
@@ -13,10 +13,10 @@ export const ProfileSetup: React.FC = () => {
   
   const [formData, setFormData] = useState({
     artistName: user?.artistName || '',
-    bio: '',
-    instagram: '',
-    phone: '',
-    emergencyContact: '',
+    bio: user?.bio || '',
+    instagram: user?.instagram || '',
+    phone: user?.phone || '',
+    emergencyContact: user?.emergencyContact || '',
   });
   
   const [error, setError] = useState('');
@@ -35,8 +35,12 @@ export const ProfileSetup: React.FC = () => {
 
     try {
       // Update user profile
-      updateProfile({
+      await updateProfile({
         artistName: formData.artistName.trim(),
+        bio: formData.bio.trim() || undefined,
+        instagram: formData.instagram.trim() || undefined,
+        phone: formData.phone.trim() || undefined,
+        emergencyContact: formData.emergencyContact.trim() || undefined,
         profileComplete: true,
       });
 

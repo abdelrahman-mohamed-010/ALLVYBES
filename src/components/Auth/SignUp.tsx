@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { Button } from '../UI/Button';
 import { Input } from '../UI/Input';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { auth } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 import { Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
+import { SignUpData } from '../../types/auth';
 
 export const SignUp: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignUpData>({
     email: '',
     password: '',
-    confirmPassword: '',
     artistName: '',
-    accountType: 'artist' as 'artist' | 'admin'
+    accountType: 'artist'
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
@@ -25,12 +26,12 @@ export const SignUp: React.FC = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.artistName) {
+    if (!formData.email || !formData.password || !confirmPassword || !formData.artistName) {
       setError('Please fill in all fields.');
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
@@ -44,17 +45,14 @@ export const SignUp: React.FC = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email.trim(),
-        password: formData.password,
-        options: {
-          data: {
-            artistName: formData.artistName.trim(),
-            isAdmin: formData.accountType === 'admin',
-            profileComplete: false,
-          }
+      const { data, error } = await auth.signUp(
+        formData.email.trim(),
+        formData.password,
+        {
+          artistName: formData.artistName.trim(),
+          isAdmin: formData.accountType === 'admin',
         }
-      });
+      );
 
       if (error) {
         setError(error.message);
@@ -65,7 +63,8 @@ export const SignUp: React.FC = () => {
         // Show success message and redirect to login
         navigate('/login', { 
           state: { 
-            message: 'Account created successfully! Please check your email to verify your account.' 
+            message: 'Account created successfully! Please check your email to verify your account.',
+            email: formData.email
           } 
         });
       }
@@ -210,8 +209,8 @@ export const SignUp: React.FC = () => {
               <Input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm password"
-                value={formData.confirmPassword}
-                onChange={(value) => setFormData({ ...formData, confirmPassword: value })}
+                value={confirmPassword}
+                onChange={setConfirmPassword}
                 icon={Lock}
                 required
                 className="pr-12"

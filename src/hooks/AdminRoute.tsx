@@ -1,17 +1,18 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { VybesLoader } from '../components/UI/VybesLoader';
+import { AdminPermission } from '../types/auth';
 
 interface AdminRouteProps {
-  requiredRole?: 'admin' | 'super_admin';
+  requiredPermission?: AdminPermission;
   fallbackPath?: string;
 }
 
 export function AdminRoute({ 
-  requiredRole = 'admin', 
+  requiredPermission,
   fallbackPath = '/' 
 }: AdminRouteProps) {
-  const { user, loading, isAuthenticated, isAdmin } = useAuth();
+  const { user, loading, isAuthenticated, isAdmin, hasPermission } = useAuth();
 
   if (loading) {
     return <VybesLoader />;
@@ -25,10 +26,9 @@ export function AdminRoute({
     return <Navigate to={fallbackPath} replace />;
   }
 
-  // For future role-based access control
-  if (requiredRole === 'super_admin' && user?.isAdmin) {
-    // Add super admin check here when implemented
-    // For now, all admins can access
+  // Check specific permission if required
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <Outlet />;
