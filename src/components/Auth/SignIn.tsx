@@ -1,77 +1,213 @@
-import React, { useState } from "react";
-import { Button } from "../UI/Button";
-import { Input } from "../UI/Input";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabaseClient";
+import React, { useState } from 'react';
+import { Button } from '../UI/Button';
+import { Input } from '../UI/Input';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
+import { useStore } from '../../store/useStore';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 export const SignIn: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { darkMode } = useStore();
+
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
     setLoading(true);
-    setError("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      navigate("/");
+    setError('');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data.user) {
+        // Navigate to intended destination or home
+        navigate(from, { replace: true });
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Sign in error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Demo login functions
+  const handleDemoArtist = async () => {
+    setEmail('artist@demo.com');
+    setPassword('demo123');
+    // Auto-submit after setting values
+    setTimeout(() => {
+      const form = document.querySelector('form') as HTMLFormElement;
+      form?.requestSubmit();
+    }, 100);
+  };
+
+  const handleDemoAdmin = async () => {
+    setEmail('admin@demo.com');
+    setPassword('demo123');
+    // Auto-submit after setting values
+    setTimeout(() => {
+      const form = document.querySelector('form') as HTMLFormElement;
+      form?.requestSubmit();
+    }, 100);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-green/10 to-primary-purple/10">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md"
-      >
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-primary-green to-primary-purple bg-clip-text text-transparent">
-          Sign In
-        </h2>
-        <div className="mb-4">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={setEmail}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={setPassword}
-            required
-          />
-        </div>
-        {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
-        <button type="submit" className="w-full mb-2">
-          <Button variant="primary" className="w-full">
-            Sign In
-          </Button>
-        </button>
-        <div className="flex justify-between text-sm mt-2">
-          <Link to="/signup" className="text-primary-green hover:underline">
-            Create account
-          </Link>
-          <Link
-            to="/forgot-password"
-            className="text-primary-purple hover:underline"
+    <div className={`min-h-screen flex items-center justify-center ${
+      darkMode ? 'bg-dark-bg' : 'bg-gradient-to-br from-primary-green/10 to-primary-purple/10'
+    }`}>
+      <div className="w-full max-w-md px-6">
+        <form
+          onSubmit={handleSubmit}
+          className={`p-8 rounded-2xl shadow-xl ${
+            darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'
+          }`}
+        >
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-primary-green to-primary-purple bg-clip-text text-transparent">
+              ALL VYBES
+            </h1>
+            <h2 className={`text-2xl font-bold mb-2 ${
+              darkMode ? 'text-dark-text' : 'text-gray-900'
+            }`}>
+              Welcome Back
+            </h2>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Sign in to your account
+            </p>
+          </div>
+
+          {/* Demo Buttons */}
+          <div className="mb-6 space-y-2">
+            <p className={`text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Quick Demo Access:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                onClick={handleDemoArtist}
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+              >
+                Demo Artist
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDemoAdmin}
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+              >
+                Demo Admin
+              </Button>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={setEmail}
+              icon={Mail}
+              required
+              className="w-full"
+            />
+            
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={setPassword}
+                icon={Lock}
+                required
+                className="w-full pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+                  darkMode ? 'text-gray-400 hover:text-dark-text' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700">
+              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={loading}
+            className="w-full mt-6"
+            glow
           >
-            Forgot password?
-          </Link>
-        </div>
-      </form>
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Signing In...
+              </div>
+            ) : (
+              'Sign In'
+            )}
+          </Button>
+
+          {/* Footer Links */}
+          <div className="mt-6 space-y-3">
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-primary-purple hover:text-primary-purple/80 text-sm font-medium"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+            
+            <div className={`text-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                className="text-primary-green hover:text-primary-green/80 font-medium"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

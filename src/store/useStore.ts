@@ -6,7 +6,7 @@ interface AppState {
   darkMode: boolean;
   toggleDarkMode: () => void;
 
-  // User
+  // User (legacy - now using auth store)
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   
@@ -48,7 +48,7 @@ export const useStore = create<AppState>((set, get) => ({
   darkMode: false,
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
 
-  // User
+  // User (legacy - keeping for backward compatibility)
   currentUser: {
     id: 'admin-1',
     artistName: 'DJ VYBE',

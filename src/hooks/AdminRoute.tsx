@@ -1,22 +1,35 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
-import { useStore } from "../store/useStore";
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from './useAuth';
+import { VybesLoader } from '../components/UI/VybesLoader';
 
-export function AdminRoute() {
-  const navigate = useNavigate();
-  const currentUser = useStore((state) => state.currentUser);
-  const [checked, setChecked] = useState(false);
+interface AdminRouteProps {
+  requiredRole?: 'admin' | 'super_admin';
+  fallbackPath?: string;
+}
 
-  useEffect(() => {
-    // Wait for currentUser to be loaded (null means not logged in, undefined means not loaded)
-    if (typeof currentUser === "undefined") return;
-    setChecked(true);
-    if (currentUser && !currentUser.isAdmin) {
-      navigate("/");
-    }
-  }, [currentUser, navigate]);
+export function AdminRoute({ 
+  requiredRole = 'admin', 
+  fallbackPath = '/' 
+}: AdminRouteProps) {
+  const { user, loading, isAuthenticated, isAdmin } = useAuth();
 
-  if (!checked) return null;
-  if (!currentUser || !currentUser.isAdmin) return null;
+  if (loading) {
+    return <VybesLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to={fallbackPath} replace />;
+  }
+
+  // For future role-based access control
+  if (requiredRole === 'super_admin' && user?.isAdmin) {
+    // Add super admin check here when implemented
+    // For now, all admins can access
+  }
+
   return <Outlet />;
 }

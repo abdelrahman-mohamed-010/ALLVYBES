@@ -20,15 +20,18 @@ import { ArtistProfile } from "./components/Profile/ArtistProfile";
 import { SignIn } from "./components/Auth/SignIn";
 import { SignUp } from "./components/Auth/SignUp";
 import { ForgotPassword } from "./components/Auth/ForgotPassword";
+import { ProfileSetup } from "./components/Auth/ProfileSetup";
 
 import { ProtectedRoute } from "./hooks/ProtectedRoute";
 import { AdminRoute } from "./hooks/AdminRoute";
+import { useAuth } from "./hooks/useAuth";
 import { useStore } from "./store/useStore";
 
 // Layout component to handle header and navigation logic
 const AppLayout = () => {
   const location = useLocation();
-  const { darkMode, currentUser } = useStore();
+  const { darkMode } = useStore();
+  const { user } = useAuth();
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -52,6 +55,8 @@ const AppLayout = () => {
         return "Settings";
       case "/profile":
         return "Profile";
+      case "/profile/setup":
+        return "Profile Setup";
       default:
         return "ALL VYBES";
     }
@@ -62,14 +67,16 @@ const AppLayout = () => {
     location.pathname !== "/admin/events" &&
     location.pathname !== "/login" &&
     location.pathname !== "/signup" &&
-    location.pathname !== "/forgot-password";
+    location.pathname !== "/forgot-password" &&
+    location.pathname !== "/profile/setup";
 
   const showHeader =
     location.pathname !== "/" &&
     location.pathname !== "/checkin" &&
     location.pathname !== "/login" &&
     location.pathname !== "/signup" &&
-    location.pathname !== "/forgot-password";
+    location.pathname !== "/forgot-password" &&
+    location.pathname !== "/profile/setup";
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -96,7 +103,6 @@ const AppLayout = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected routes */}
-
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/events" element={<EventsPage />} />
@@ -105,11 +111,12 @@ const AppLayout = () => {
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/platforms" element={<PlatformsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/profile/setup" element={<ProfileSetup />} />
             <Route
               path="/profile"
               element={
-                currentUser ? (
-                  <ArtistProfile artist={currentUser} isOwnProfile={true} />
+                user ? (
+                  <ArtistProfile artist={user} isOwnProfile={true} />
                 ) : (
                   <HomePage />
                 )

@@ -1,41 +1,47 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
-import { useAuth } from "./useAuth";
-import { VybesLoader } from "../components/UI/VybesLoader";
+import { useEffect, useState } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from './useAuth';
+import { VybesLoader } from '../components/UI/VybesLoader';
 
-// Debounce loader to avoid flashing due to quick loading toggles
-export function ProtectedRoute() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+interface ProtectedRouteProps {
+  requireAuth?: boolean;
+  redirectTo?: string;
+}
+
+export function ProtectedRoute({ 
+  requireAuth = true, 
+  redirectTo = '/login' 
+}: ProtectedRouteProps) {
+  const { user, loading, isAuthenticated } = useAuth();
+  const location = useLocation();
   const [showLoader, setShowLoader] = useState(false);
-  const loaderTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Only show loader if loading stays true for 200ms
-    if (loading) {
-      loaderTimeout.current = setTimeout(() => setShowLoader(true), 200);
-    } else {
-      setShowLoader(false);
-      if (loaderTimeout.current) {
-        clearTimeout(loaderTimeout.current);
-        loaderTimeout.current = null;
-      }
-    }
+    // Show loader after a brief delay to avoid flashing
+    const timer = setTimeout(() => {
+      if (loading) setShowLoader(true);
+    }, 200);
+
     return () => {
-      if (loaderTimeout.current) {
-        clearTimeout(loaderTimeout.current);
-        loaderTimeout.current = null;
-      }
+      clearTimeout(timer);
+      setShowLoader(false);
     };
   }, [loading]);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/login");
-    }
-  }, [user, loading, navigate]);
+  // Still loading
+  if (loading) {
+    return showLoader ? <VybesLoader /> : null;
+  }
 
-  if (showLoader) return <VybesLoader />;
-  // Custom element rendering to pass user/loading to AdminRoute
-  return <Outlet context={{ user, loading }} />;
+  // Require authentication but user is not authenticated
+  if (requireAuth && !isAuthenticated) {
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
+
+  // User is authenticated but profile is incomplete
+  if (isAuthenticated && user && !user.profileComplete && location.pathname !== '/profile/setup') {
+    return <Navigate to="/profile/setup" replace />;
+  }
+
+  return <Outlet />;
 }
